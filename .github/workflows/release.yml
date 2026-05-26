@@ -1,0 +1,140 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+
+      - name: Test core packages
+        run: go test ./pkg/... ./internal/validate ./internal/config ./internal/netutil
+
+  windows:
+    name: Windows amd64
+    runs-on: windows-latest
+    needs: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+
+      - name: Setup MinGW
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: mingw-w64-x86_64-gcc
+
+      - name: Generate icon resources
+        shell: pwsh
+        run: |
+          $env:Path = "C:\msys64\mingw64\bin;$env:Path"
+          go run ./tools/icongen
+          windres -O coff -i "cmd\voicecast-windows\voicecast.rc" -o "cmd\voicecast-windows\voicecast_windows.syso"
+
+      - name: Build
+        shell: pwsh
+        run: |
+          $env:Path = "C:\msys64\mingw64\bin;$env:Path"
+          $env:GOOS = "windows"
+          $env:GOARCH = "amd64"
+          $env:GOAMD64 = "v1"
+          $env:CGO_ENABLED = "1"
+          New-Item -ItemType Directory -Force -Path "dist" | Out-Null
+          go build -trimpath -ldflags "-s -w -H=windowsgui -linkmode=internal" -o "dist/VoiceCast-Windows-amd64.exe" ./cmd/voicecast-windows
+          go version -m "dist/VoiceCast-Windows-amd64.exe"
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VoiceCast-Windows-amd64
+          path: dist/VoiceCast-Windows-amd64.exe
+
+  android:
+    name: Android APK
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android packages
+        run: |
+          sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
+
+      - name: Install Fyne tool
+        run: go install fyne.io/fyne/v2/cmd/fyne@v2.7.4
+
+      - name: Build APK
+        run: |
+          mkdir -p dist
+          fyne package \
+            -os android \
+            -appID com.poouo.voicecast \
+            -name VoiceCast \
+            -icon assets/logo/voicecast.svg \
+            ./cmd/voicecast-android
+          mv VoiceCast.apk dist/VoiceCast-Android.apk
+
+      - name: Upload Android artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VoiceCast-Android
+          path: dist/VoiceCast-Android.apk
+
+  release:
+    name: GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    needs:
+      - windows
+      - android
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/VoiceCast-Windows-amd64/VoiceCast-Windows-amd64.exe
+            dist/VoiceCast-Android/VoiceCast-Android.apk

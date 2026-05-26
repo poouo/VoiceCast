@@ -1,0 +1,9 @@
+Website = "https://github.com/poouo/VoiceCast"
+
+[Details]
+Icon = "assets/logo/voicecast.svg"
+Name = "VoiceCast"
+ID = "com.poouo.voicecast"
+Version = "0.1.0"
+Build = 1
+

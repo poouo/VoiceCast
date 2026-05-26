@@ -1,0 +1,10 @@
+bin/
+dist/
+build/
+*.exe
+*.apk
+*.aab
+*.log
+.fyne/
+tmp/
+
