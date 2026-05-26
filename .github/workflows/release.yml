@@ -109,7 +109,7 @@ jobs:
           cd cmd/voicecast-android
           APP_VERSION="${GITHUB_REF_NAME#v}"
           if [[ ! "$APP_VERSION" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then
-            APP_VERSION="0.1.1"
+            APP_VERSION="0.1.2"
           fi
           fyne package \
             -os android/arm64 \

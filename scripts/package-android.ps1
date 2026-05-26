@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 $env:GOPROXY = "https://goproxy.cn,direct"
-$version = if ($env:VOICECAST_VERSION) { $env:VOICECAST_VERSION } else { "0.1.1" }
-$build = if ($env:VOICECAST_BUILD) { $env:VOICECAST_BUILD } else { "2" }
+$version = if ($env:VOICECAST_VERSION) { $env:VOICECAST_VERSION } else { "0.1.2" }
+$build = if ($env:VOICECAST_BUILD) { $env:VOICECAST_BUILD } else { "3" }
 
 if (-not $env:ANDROID_NDK_HOME) {
     throw "ANDROID_NDK_HOME is required. Install Android NDK first."

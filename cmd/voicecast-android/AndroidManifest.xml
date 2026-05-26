@@ -6,8 +6,7 @@
 
 	<application
 		android:label="VoiceCast"
-		android:debuggable="false"
-		android:usesCleartextTraffic="true">
+		android:debuggable="false">
 		<activity
 			android:name="org.golang.app.GoNativeActivity"
 			android:label="VoiceCast"
