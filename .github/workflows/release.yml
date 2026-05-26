@@ -105,13 +105,17 @@ jobs:
       - name: Build APK
         run: |
           mkdir -p dist
+          cp assets/logo/voicecast-256.png cmd/voicecast-android/Icon.png
+          cd cmd/voicecast-android
           fyne package \
             -os android \
             -appID com.poouo.voicecast \
             -name VoiceCast \
-            -icon assets/logo/voicecast.svg \
-            ./cmd/voicecast-android
-          mv VoiceCast.apk dist/VoiceCast-Android.apk
+            -icon Icon.png \
+            -appVersion 0.1.0 \
+            -appBuild 1
+          cd ../..
+          mv cmd/voicecast-android/VoiceCast.apk dist/VoiceCast-Android.apk
 
       - name: Upload Android artifact
         uses: actions/upload-artifact@v4
