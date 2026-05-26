@@ -22,7 +22,9 @@ func (ui *AppUI) startListening() {
 		return
 	}
 	ui.cfg.ListenPort = port
-	ui.cfg.AutoListen = ui.mode == ModeAndroid
+	if ui.mode == ModeAndroid {
+		ui.cfg.AutoListen = false
+	}
 	_ = config.Save(ui.cfg)
 	ui.startListen.Disable()
 	ui.stopListen.Enable()

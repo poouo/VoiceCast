@@ -7,4 +7,4 @@ build/
 *.log
 .fyne/
 tmp/
-
+cmd/voicecast-android/Icon.png

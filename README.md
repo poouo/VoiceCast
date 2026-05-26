@@ -38,6 +38,8 @@ VoiceCast 是一个中文界面的局域网音频推流工具，用 UDP 把 Wind
 - Android 客户端入口：`cmd/voicecast-android`
 - 配置文件：系统用户配置目录下的 `VoiceCast/config.json`
 - 默认端口：`39000`
+- Android APK 默认构建 `arm64-v8a` 单架构，安装包比四架构通用包更小。
+- Android 打开后不会自动监听，需要手动点击“开始监听”。
 - UDP 协议：`pkg/protocol`
 - 地址校验：`internal/validate`
 - 音频播放：`oto`

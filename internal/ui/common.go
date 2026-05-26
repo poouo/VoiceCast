@@ -90,10 +90,8 @@ func (ui *AppUI) Run() {
 }
 
 func (ui *AppUI) build() {
-	ui.lanLabel = widget.NewLabel(strings.Join(netutil.LANIPv4s(), " / "))
-	if ui.lanLabel.Text == "" {
-		ui.lanLabel.SetText("未检测到局域网 IPv4 地址")
-	}
+	ui.lanLabel = widget.NewLabel("")
+	ui.refreshLANAddresses()
 	ui.portLabel = widget.NewLabel(fmt.Sprintf("默认端口：%d", brand.DefaultPort))
 	ui.statusLabel = widget.NewLabel("就绪")
 	ui.recvStatLabel = widget.NewLabel("已接收：0 包 / 0 KB")
@@ -112,7 +110,7 @@ func (ui *AppUI) build() {
 	header := container.NewBorder(nil, nil, logo, nil, container.NewVBox(title, widget.NewLabel("局域网语音接收与推送工具")))
 
 	localCard := widget.NewCard("本机地址", "", container.NewVBox(
-		ui.lanLabel,
+		container.NewBorder(nil, nil, nil, widget.NewButtonWithIcon("刷新", theme.ViewRefreshIcon(), ui.refreshLANAddresses), ui.lanLabel),
 		ui.portLabel,
 		container.NewHBox(ui.startListen, ui.stopListen),
 		ui.recvStatLabel,
@@ -141,12 +139,24 @@ func (ui *AppUI) build() {
 		ui.window.Hide()
 		ui.statusLabel.SetText("已最小化到系统托盘")
 	})
-	if ui.mode == ModeAndroid || ui.cfg.AutoListen {
+	if ui.mode == ModeWindows && ui.cfg.AutoListen {
 		go func() {
 			time.Sleep(300 * time.Millisecond)
 			fyne.Do(ui.startListening)
 		}()
 	}
+	go func() {
+		time.Sleep(1200 * time.Millisecond)
+		fyne.Do(ui.refreshLANAddresses)
+	}()
+}
+
+func (ui *AppUI) refreshLANAddresses() {
+	text := strings.Join(netutil.LANIPv4s(), " / ")
+	if text == "" {
+		text = "未检测到局域网 IPv4 地址，请确认已连接 Wi-Fi"
+	}
+	ui.lanLabel.SetText(text)
 }
 
 func (ui *AppUI) setupTray() {

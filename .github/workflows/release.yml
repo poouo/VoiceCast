@@ -107,13 +107,18 @@ jobs:
           mkdir -p dist
           cp assets/logo/voicecast-256.png cmd/voicecast-android/Icon.png
           cd cmd/voicecast-android
+          APP_VERSION="${GITHUB_REF_NAME#v}"
+          if [[ ! "$APP_VERSION" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then
+            APP_VERSION="0.1.1"
+          fi
           fyne package \
-            -os android \
+            -os android/arm64 \
             -appID com.poouo.voicecast \
             -name VoiceCast \
             -icon Icon.png \
-            -appVersion 0.1.0 \
-            -appBuild 1
+            -appVersion "$APP_VERSION" \
+            -appBuild "$GITHUB_RUN_NUMBER" \
+            -release
           cd ../..
           mv cmd/voicecast-android/VoiceCast.apk dist/VoiceCast-Android.apk
 
