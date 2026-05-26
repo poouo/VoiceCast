@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"image/color"
 	"strings"
 	"time"
 
@@ -56,6 +57,9 @@ func New(mode Mode) (*AppUI, error) {
 		cfg = config.Default()
 	}
 	a := app.NewWithID(brand.AppID)
+	if mode == ModeAndroid {
+		a.Settings().SetTheme(theme.DarkTheme())
+	}
 	a.SetIcon(IconResource())
 	w := a.NewWindow(brand.AppName)
 	w.SetIcon(IconResource())
@@ -116,19 +120,15 @@ func (ui *AppUI) build() {
 		ui.recvStatLabel,
 	))
 
-	content := container.NewVBox(header, localCard)
 	if ui.mode == ModeWindows {
+		content := container.NewVBox(header, localCard)
 		content.Add(ui.senderCard())
-	} else {
-		content.Add(widget.NewCard("接收模式", "", widget.NewLabel("Android 客户端仅支持接收局域网音频。")))
-	}
-	content.Add(widget.NewCard("状态", "", container.NewVBox(ui.statusLabel, widget.NewLabel("配置文件："+ui.cfgPath))))
-
-	ui.window.SetContent(container.NewPadded(content))
-	if ui.mode == ModeWindows {
+		content.Add(widget.NewCard("状态", "", container.NewVBox(ui.statusLabel, widget.NewLabel("配置文件："+ui.cfgPath))))
+		ui.window.SetContent(container.NewPadded(content))
 		ui.window.Resize(fyne.NewSize(680, 520))
 	} else {
-		ui.window.Resize(fyne.NewSize(420, 640))
+		ui.window.SetContent(ui.androidPlayerContent())
+		ui.window.Resize(fyne.NewSize(420, 760))
 	}
 	ui.setupTray()
 	ui.window.SetCloseIntercept(func() {
@@ -157,6 +157,55 @@ func (ui *AppUI) refreshLANAddresses() {
 		text = "未检测到局域网 IPv4 地址，请确认已连接 Wi-Fi"
 	}
 	ui.lanLabel.SetText(text)
+}
+
+func (ui *AppUI) androidPlayerContent() fyne.CanvasObject {
+	topSafe := spacer(56)
+	title := canvas.NewText(brand.AppName, color.NRGBA{R: 245, G: 248, B: 252, A: 255})
+	title.TextSize = 28
+	title.TextStyle.Bold = true
+	subtitle := canvas.NewText("局域网音频接收", color.NRGBA{R: 156, G: 170, B: 188, A: 255})
+	subtitle.TextSize = 15
+
+	disc := canvas.NewCircle(color.NRGBA{R: 32, G: 160, B: 155, A: 255})
+	logo := canvas.NewImageFromResource(IconResource())
+	logo.SetMinSize(fyne.NewSize(100, 100))
+	cover := container.NewCenter(container.NewGridWrap(fyne.NewSize(190, 190),
+		container.NewStack(disc, container.NewCenter(logo)),
+	))
+
+	ui.startListen.Importance = widget.HighImportance
+	buttons := container.NewGridWithColumns(2, ui.startListen, ui.stopListen)
+	address := container.NewBorder(nil, nil, nil, widget.NewButtonWithIcon("", theme.ViewRefreshIcon(), ui.refreshLANAddresses), ui.lanLabel)
+
+	panel := widget.NewCard("", "", container.NewVBox(
+		widget.NewLabel("本机地址"),
+		address,
+		ui.portLabel,
+		widget.NewSeparator(),
+		ui.recvStatLabel,
+		ui.statusLabel,
+	))
+
+	body := container.NewVBox(
+		topSafe,
+		container.NewCenter(title),
+		container.NewCenter(subtitle),
+		spacer(24),
+		cover,
+		spacer(22),
+		buttons,
+		spacer(14),
+		panel,
+	)
+	bg := canvas.NewRectangle(color.NRGBA{R: 14, G: 18, B: 24, A: 255})
+	return container.NewStack(bg, container.NewPadded(body))
+}
+
+func spacer(height float32) fyne.CanvasObject {
+	rect := canvas.NewRectangle(color.Transparent)
+	rect.SetMinSize(fyne.NewSize(1, height))
+	return rect
 }
 
 func (ui *AppUI) setupTray() {

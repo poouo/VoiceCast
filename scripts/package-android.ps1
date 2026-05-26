@@ -1,13 +1,18 @@
 $ErrorActionPreference = "Stop"
 $env:GOPROXY = "https://goproxy.cn,direct"
-$version = if ($env:VOICECAST_VERSION) { $env:VOICECAST_VERSION } else { "0.1.2" }
-$build = if ($env:VOICECAST_BUILD) { $env:VOICECAST_BUILD } else { "3" }
+$version = if ($env:VOICECAST_VERSION) { $env:VOICECAST_VERSION } else { "0.1.3" }
+$build = if ($env:VOICECAST_BUILD) { $env:VOICECAST_BUILD } else { "4" }
 
 if (-not $env:ANDROID_NDK_HOME) {
     throw "ANDROID_NDK_HOME is required. Install Android NDK first."
 }
 
 Copy-Item -Force -LiteralPath "assets\logo\voicecast-256.png" -Destination "cmd\voicecast-android\Icon.png"
+$manifestPath = "cmd\voicecast-android\AndroidManifest.xml"
+$manifest = Get-Content -Raw -LiteralPath $manifestPath
+$manifest = $manifest -replace 'android:versionName="[^"]+"', "android:versionName=`"$version`""
+$manifest = $manifest -replace 'android:versionCode="[0-9]+"', "android:versionCode=`"$build`""
+Set-Content -LiteralPath $manifestPath -Value $manifest -Encoding UTF8
 Push-Location "cmd\voicecast-android"
 try {
     go run fyne.io/fyne/v2/cmd/fyne package `

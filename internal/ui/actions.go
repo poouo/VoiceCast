@@ -12,6 +12,9 @@ import (
 )
 
 func (ui *AppUI) startListening() {
+	if ui.mode == ModeWindows && ui.sender != nil && ui.sender.Running() {
+		ui.stopSending()
+	}
 	port := brand.DefaultPort
 	if err := validate.ListenPort(port); err != nil {
 		ui.showError(err)
@@ -49,6 +52,9 @@ func (ui *AppUI) stopListening() {
 func (ui *AppUI) startSending() {
 	if ui.sender == nil {
 		return
+	}
+	if ui.receiver != nil && ui.receiver.Running() {
+		ui.stopListening()
 	}
 	ip := strings.TrimSpace(ui.ipEntry.Text)
 	port := brand.DefaultPort
