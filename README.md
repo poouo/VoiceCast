@@ -41,6 +41,7 @@ VoiceCast 是一个中文界面的局域网音频推流工具，用 UDP 把 Wind
 - Android APK 默认构建 `arm64-v8a` 单架构，安装包比四架构通用包更小。
 - Android 打开后不会自动监听，需要手动点击“开始监听”。
 - Android 使用接近音乐播放器的接收界面，并为顶部系统区域预留空间。
+- Android 强制竖屏显示，避免横屏布局异常。
 - Windows 监听和推送互斥：开始其中一个模式会先停止另一个模式。
 - UDP 协议：`pkg/protocol`
 - 地址校验：`internal/validate`

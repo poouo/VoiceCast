@@ -109,7 +109,7 @@ jobs:
           cd cmd/voicecast-android
           APP_VERSION="${GITHUB_REF_NAME#v}"
           if [[ ! "$APP_VERSION" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then
-            APP_VERSION="0.1.3"
+            APP_VERSION="0.1.4"
           fi
           sed -i "s/android:versionName=\"[^\"]*\"/android:versionName=\"$APP_VERSION\"/" AndroidManifest.xml
           sed -i "s/android:versionCode=\"[0-9]*\"/android:versionCode=\"$GITHUB_RUN_NUMBER\"/" AndroidManifest.xml

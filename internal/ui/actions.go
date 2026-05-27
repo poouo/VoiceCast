@@ -31,7 +31,7 @@ func (ui *AppUI) startListening() {
 	_ = config.Save(ui.cfg)
 	ui.startListen.Disable()
 	ui.stopListen.Enable()
-	ui.statusLabel.SetText(fmt.Sprintf("正在监听 UDP 端口 %d", port))
+	ui.statusLabel.SetText(fmt.Sprintf("监听中：%d", port))
 }
 
 func (ui *AppUI) stopListening() {
@@ -46,6 +46,9 @@ func (ui *AppUI) stopListening() {
 	}
 	if ui.statusLabel != nil {
 		ui.statusLabel.SetText("已停止监听")
+	}
+	if ui.recvStatLabel != nil {
+		ui.recvStatLabel.SetText("未接收")
 	}
 }
 
@@ -72,7 +75,7 @@ func (ui *AppUI) startSending() {
 	ui.startSend.Disable()
 	ui.stopSend.Enable()
 	ui.ipEntry.Disable()
-	ui.statusLabel.SetText(fmt.Sprintf("正在推送到 %s:%d", ip, port))
+	ui.statusLabel.SetText(fmt.Sprintf("推送中：%s", ip))
 }
 
 func (ui *AppUI) stopSending() {
@@ -90,6 +93,9 @@ func (ui *AppUI) stopSending() {
 	}
 	if ui.statusLabel != nil {
 		ui.statusLabel.SetText("已停止推送")
+	}
+	if ui.sendStatLabel != nil {
+		ui.sendStatLabel.SetText("未推送")
 	}
 }
 

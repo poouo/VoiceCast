@@ -73,14 +73,14 @@ func New(mode Mode) (*AppUI, error) {
 	}
 	ui.receiver = service.NewReceiver(func(stats service.ReceiveStats) {
 		fyne.Do(func() {
-			ui.recvStatLabel.SetText(fmt.Sprintf("已接收：%d 包 / %.1f KB，最后序号：%d", stats.Packets, float64(stats.Bytes)/1024, stats.LastSequence))
+			ui.recvStatLabel.SetText(fmt.Sprintf("接收中：%.1f KB", float64(stats.Bytes)/1024))
 			ui.statusLabel.SetText("正在接收音频")
 		})
 	})
 	if mode == ModeWindows {
 		ui.sender = service.NewSender(func(stats service.SendStats) {
 			fyne.Do(func() {
-				ui.sendStatLabel.SetText(fmt.Sprintf("已推送：%d 包 / %.1f KB", stats.Packets, float64(stats.Bytes)/1024))
+				ui.sendStatLabel.SetText(fmt.Sprintf("推送中：%.1f KB", float64(stats.Bytes)/1024))
 				ui.statusLabel.SetText("正在推送本机声音")
 			})
 		})
@@ -96,10 +96,10 @@ func (ui *AppUI) Run() {
 func (ui *AppUI) build() {
 	ui.lanLabel = widget.NewLabel("")
 	ui.refreshLANAddresses()
-	ui.portLabel = widget.NewLabel(fmt.Sprintf("默认端口：%d", brand.DefaultPort))
+	ui.portLabel = widget.NewLabel(fmt.Sprintf("端口：%d", brand.DefaultPort))
 	ui.statusLabel = widget.NewLabel("就绪")
-	ui.recvStatLabel = widget.NewLabel("已接收：0 包 / 0 KB")
-	ui.sendStatLabel = widget.NewLabel("已推送：0 包 / 0 KB")
+	ui.recvStatLabel = widget.NewLabel("未接收")
+	ui.sendStatLabel = widget.NewLabel("未推送")
 
 	ui.startListen = widget.NewButtonWithIcon("开始监听", theme.MediaPlayIcon(), ui.startListening)
 	ui.startListen.Importance = widget.HighImportance
@@ -107,13 +107,13 @@ func (ui *AppUI) build() {
 	ui.stopListen.Disable()
 
 	title := canvas.NewText(brand.AppName, theme.Color(theme.ColorNameForeground))
-	title.TextSize = 24
+	title.TextSize = 22
 	title.TextStyle.Bold = true
 	logo := canvas.NewImageFromResource(IconResource())
-	logo.SetMinSize(fyne.NewSize(52, 52))
-	header := container.NewBorder(nil, nil, logo, nil, container.NewVBox(title, widget.NewLabel("局域网语音接收与推送工具")))
+	logo.SetMinSize(fyne.NewSize(44, 44))
+	header := container.NewBorder(nil, nil, logo, nil, container.NewVBox(title))
 
-	localCard := widget.NewCard("本机地址", "", container.NewVBox(
+	localCard := widget.NewCard("监听", "", container.NewVBox(
 		container.NewBorder(nil, nil, nil, widget.NewButtonWithIcon("刷新", theme.ViewRefreshIcon(), ui.refreshLANAddresses), ui.lanLabel),
 		ui.portLabel,
 		container.NewHBox(ui.startListen, ui.stopListen),
@@ -123,12 +123,12 @@ func (ui *AppUI) build() {
 	if ui.mode == ModeWindows {
 		content := container.NewVBox(header, localCard)
 		content.Add(ui.senderCard())
-		content.Add(widget.NewCard("状态", "", container.NewVBox(ui.statusLabel, widget.NewLabel("配置文件："+ui.cfgPath))))
+		content.Add(widget.NewCard("状态", "", ui.statusLabel))
 		ui.window.SetContent(container.NewPadded(content))
-		ui.window.Resize(fyne.NewSize(680, 520))
+		ui.window.Resize(fyne.NewSize(560, 430))
 	} else {
 		ui.window.SetContent(ui.androidPlayerContent())
-		ui.window.Resize(fyne.NewSize(420, 760))
+		ui.window.Resize(fyne.NewSize(390, 680))
 	}
 	ui.setupTray()
 	ui.window.SetCloseIntercept(func() {
@@ -154,23 +154,23 @@ func (ui *AppUI) build() {
 func (ui *AppUI) refreshLANAddresses() {
 	text := strings.Join(netutil.LANIPv4s(), " / ")
 	if text == "" {
-		text = "未检测到局域网 IPv4 地址，请确认已连接 Wi-Fi"
+		text = "未检测到内网 IP"
 	}
 	ui.lanLabel.SetText(text)
 }
 
 func (ui *AppUI) androidPlayerContent() fyne.CanvasObject {
-	topSafe := spacer(56)
+	topSafe := spacer(44)
 	title := canvas.NewText(brand.AppName, color.NRGBA{R: 245, G: 248, B: 252, A: 255})
-	title.TextSize = 28
+	title.TextSize = 26
 	title.TextStyle.Bold = true
-	subtitle := canvas.NewText("局域网音频接收", color.NRGBA{R: 156, G: 170, B: 188, A: 255})
+	subtitle := canvas.NewText("音频接收", color.NRGBA{R: 156, G: 170, B: 188, A: 255})
 	subtitle.TextSize = 15
 
 	disc := canvas.NewCircle(color.NRGBA{R: 32, G: 160, B: 155, A: 255})
 	logo := canvas.NewImageFromResource(IconResource())
-	logo.SetMinSize(fyne.NewSize(100, 100))
-	cover := container.NewCenter(container.NewGridWrap(fyne.NewSize(190, 190),
+	logo.SetMinSize(fyne.NewSize(86, 86))
+	cover := container.NewCenter(container.NewGridWrap(fyne.NewSize(160, 160),
 		container.NewStack(disc, container.NewCenter(logo)),
 	))
 
@@ -179,7 +179,7 @@ func (ui *AppUI) androidPlayerContent() fyne.CanvasObject {
 	address := container.NewBorder(nil, nil, nil, widget.NewButtonWithIcon("", theme.ViewRefreshIcon(), ui.refreshLANAddresses), ui.lanLabel)
 
 	panel := widget.NewCard("", "", container.NewVBox(
-		widget.NewLabel("本机地址"),
+		widget.NewLabel("本机"),
 		address,
 		ui.portLabel,
 		widget.NewSeparator(),
@@ -191,11 +191,11 @@ func (ui *AppUI) androidPlayerContent() fyne.CanvasObject {
 		topSafe,
 		container.NewCenter(title),
 		container.NewCenter(subtitle),
-		spacer(24),
+		spacer(18),
 		cover,
-		spacer(22),
+		spacer(18),
 		buttons,
-		spacer(14),
+		spacer(10),
 		panel,
 	)
 	bg := canvas.NewRectangle(color.NRGBA{R: 14, G: 18, B: 24, A: 255})
@@ -249,11 +249,10 @@ func (ui *AppUI) senderCard() fyne.CanvasObject {
 	ui.startSend.Importance = widget.HighImportance
 	ui.stopSend = widget.NewButtonWithIcon("停止推送", theme.MediaStopIcon(), ui.stopSending)
 	ui.stopSend.Disable()
-	return widget.NewCard("推送到设备", "", container.NewVBox(
+	return widget.NewCard("推送", "", container.NewVBox(
 		widget.NewForm(widget.NewFormItem("目标 IP", ui.ipEntry)),
-		widget.NewLabel(fmt.Sprintf("推送端口：%d", brand.DefaultPort)),
+		widget.NewLabel(fmt.Sprintf("端口：%d", brand.DefaultPort)),
 		container.NewHBox(ui.startSend, ui.stopSend),
 		ui.sendStatLabel,
-		widget.NewLabel("推送使用 Windows 系统声音回环采集，接收端保持监听即可。"),
 	))
 }
